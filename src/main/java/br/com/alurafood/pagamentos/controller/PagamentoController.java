@@ -1,4 +1,4 @@
-package br.com.alurafood.pagamentos.cotroller;
+package br.com.alurafood.pagamentos.controller;
 
 
 import br.com.alurafood.pagamentos.dto.PagamentoDto;
