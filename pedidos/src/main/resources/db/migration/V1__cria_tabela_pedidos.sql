@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS pedidos (
+  id BIGSERIAL PRIMARY KEY,
+  data_hora TIMESTAMP NOT NULL,
+  status varchar(255) NOT NULL
+);
