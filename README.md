@@ -64,6 +64,12 @@ Todas as requisições devem passar pelo Gateway para garantir o balanceamento e
 - **Pedidos**: `http://localhost:8082/pedidos-ms/pedidos`
 - **Pagamentos**: `http://localhost:8082/pagamentos-ms/pagamentos`
 
+### Documentação (Swagger)
+Você pode acessar a documentação interativa das APIs através do Gateway:
+- **Swagger Pedidos**: `http://localhost:8082/pedidos-ms/swagger-ui/index.html`
+- **Swagger Pagamentos**: `http://localhost:8082/pagamentos-ms/swagger-ui/index.html`
+
+
 ## 📂 Estrutura do Projeto
 
 ```text
