@@ -8,6 +8,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import br.com.alurafood.pagamentos.http.PedidoClient;
+import br.com.alurafood.pagamentos.model.Status;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,6 +20,9 @@ public class PagamentoService {
 
     @Autowired
     private ModelMapper modelMapper;
+
+    @Autowired
+    private PedidoClient pedido;
 
     public Page<PagamentoDto> obterTodos(Pageable paginacao) {
         return repository
@@ -51,5 +56,14 @@ public class PagamentoService {
 
     public void excluirPagamento(Long id) {
         repository.deleteById(id);
+    }
+
+    public void confirmarPagamento(Long id){
+        Pagamento pagamento = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException());
+
+        pagamento.setStatus(Status.CONFIRMADO);
+        repository.save(pagamento);
+        pedido.atualizaPagamento(pagamento.getPedidoId());
     }
 }
