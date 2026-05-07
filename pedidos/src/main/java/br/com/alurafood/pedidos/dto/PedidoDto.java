@@ -3,6 +3,8 @@ package br.com.alurafood.pedidos.dto;
 import br.com.alurafood.pedidos.model.Status;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -23,8 +25,8 @@ public class PedidoDto {
     @Schema(example = "REALIZADO")
     private Status status;
 
+    @NotEmpty
+    @Valid
     private List<ItemDoPedidoDto> itens = new ArrayList<>();
-
-
 
 }

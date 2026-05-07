@@ -5,7 +5,6 @@ import br.com.alurafood.pagamentos.model.Pagamento;
 import br.com.alurafood.pagamentos.repository.PagamentoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import br.com.alurafood.pagamentos.http.PedidoClient;
@@ -15,19 +14,25 @@ import org.springframework.stereotype.Service;
 @Service
 public class PagamentoService {
 
-    @Autowired
-    private PagamentoRepository repository;
+    private final PagamentoRepository repository;
+    private final ModelMapper modelMapper;
+    private final PedidoClient pedido;
 
-    @Autowired
-    private ModelMapper modelMapper;
-
-    @Autowired
-    private PedidoClient pedido;
+    public PagamentoService(PagamentoRepository repository, ModelMapper modelMapper, PedidoClient pedido) {
+        this.repository = repository;
+        this.modelMapper = modelMapper;
+        this.pedido = pedido;
+    }
 
     public Page<PagamentoDto> obterTodos(Pageable paginacao) {
-        return repository
-                .findAll(paginacao)
-                .map(p -> modelMapper.map(p, PagamentoDto.class));
+        try {
+            return repository
+                    .findAll(paginacao)
+                    .map(p -> modelMapper.map(p, PagamentoDto.class));
+        } catch (Exception e) {
+            System.err.println("ERRO AO LISTAR: Verifique se o campo 'sort' no Swagger está vazio! Erro: " + e.getMessage());
+            throw e;
+        }
     }
 
     public PagamentoDto obterPorId(Long id) {
@@ -39,13 +44,19 @@ public class PagamentoService {
 
     public PagamentoDto criarPagamento(PagamentoDto dto) {
         Pagamento pagamento = modelMapper.map(dto, Pagamento.class);
+        pagamento.setId(null);
+        pagamento.setStatus(Status.CRIADO);
 
-        repository.save(pagamento);
+        Pagamento salvo = repository.save(pagamento);
 
-        return modelMapper.map(pagamento, PagamentoDto.class);
+        return modelMapper.map(salvo, PagamentoDto.class);
     }
 
     public PagamentoDto atualizarPagamento(Long id, PagamentoDto dto) {
+        if (!repository.existsById(id)) {
+            throw new EntityNotFoundException();
+        }
+
         Pagamento pagamento = modelMapper.map(dto, Pagamento.class);
         pagamento.setId(id);
 

@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -34,7 +35,7 @@ public class PagamentoController {
 
     @GetMapping
     @Operation(summary = "Listar todos os pagamentos", description = "Retorna uma página com os pagamentos cadastrados")
-    public Page<PagamentoDto> listar(@PageableDefault(size = 10) Pageable paginacao) {
+    public Page<PagamentoDto> listar(@ParameterObject @PageableDefault(size = 10) Pageable paginacao) {
         return service.obterTodos(paginacao);
     }
 
@@ -56,7 +57,27 @@ public class PagamentoController {
             @ApiResponse(responseCode = "201", description = "Pagamento criado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos")
     })
-    public ResponseEntity<PagamentoDto> cadastrar(@RequestBody @Valid PagamentoDto dto, UriComponentsBuilder uriBuilder) {
+    public ResponseEntity<PagamentoDto> cadastrar(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    content = @io.swagger.v3.oas.annotations.media.Content(
+                            mediaType = "application/json",
+                            examples = {
+                                    @io.swagger.v3.oas.annotations.media.ExampleObject(
+                                            name = "Cartão de Crédito",
+                                            value = "{\"valor\": 150.00, \"nome\": \"Yasmin Santos\", \"numero\": \"4444555566667777\", \"expiracao\": \"10/28\", \"codigo\": \"123\", \"formaDePagamentoId\": 1, \"pedidoId\": 1}"
+                                    ),
+                                    @io.swagger.v3.oas.annotations.media.ExampleObject(
+                                            name = "Cartão de Débito",
+                                            value = "{\"valor\": 89.90, \"nome\": \"Yasmin Santos\", \"numero\": \"5555666677778888\", \"expiracao\": \"05/27\", \"codigo\": \"456\", \"formaDePagamentoId\": 2, \"pedidoId\": 1}"
+                                    ),
+                                    @io.swagger.v3.oas.annotations.media.ExampleObject(
+                                            name = "PIX / Outros",
+                                            value = "{\"valor\": 120.00, \"nome\": \"Yasmin Santos\", \"numero\": \"0000000000000000\", \"expiracao\": \"00/00\", \"codigo\": \"000\", \"formaDePagamentoId\": 3, \"pedidoId\": 1}"
+                                    )
+                            }
+                    )
+            )
+            @RequestBody @Valid PagamentoDto dto, UriComponentsBuilder uriBuilder) {
         PagamentoDto pagamento = service.criarPagamento(dto);
         URI endereco = uriBuilder.path("/pagamentos/{id}").buildAndExpand(pagamento.getId()).toUri();
 

@@ -19,10 +19,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PedidoService {
 
-    @Autowired
-    private PedidoRepository repository;
-
-    @Autowired
+    private final PedidoRepository repository;
     private final ModelMapper modelMapper;
 
 
@@ -41,15 +38,20 @@ public class PedidoService {
 
     public PedidoDto criarPedido(PedidoDto dto) {
         Pedido pedido = modelMapper.map(dto, Pedido.class);
+        pedido.setId(null);
 
         pedido.setDataHora(LocalDateTime.now());
         pedido.setStatus(Status.REALIZADO);
-        pedido.getItens().forEach(item -> item.setPedido(pedido));
+        pedido.getItens().forEach(item -> {
+            item.setId(null);
+            item.setPedido(pedido);
+        });
         Pedido salvo = repository.save(pedido);
 
-        return modelMapper.map(pedido, PedidoDto.class);
+        return modelMapper.map(salvo, PedidoDto.class);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public PedidoDto atualizaStatus(Long id, StatusDto dto) {
 
         Pedido pedido = repository.porIdComItens(id);
@@ -59,10 +61,11 @@ public class PedidoService {
         }
 
         pedido.setStatus(dto.getStatus());
-        repository.atualizaStatus(dto.getStatus(), pedido);
+        repository.save(pedido);
         return modelMapper.map(pedido, PedidoDto.class);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void aprovaPagamentoPedido(Long id) {
 
         Pedido pedido = repository.porIdComItens(id);
@@ -72,6 +75,6 @@ public class PedidoService {
         }
 
         pedido.setStatus(Status.PAGO);
-        repository.atualizaStatus(Status.PAGO, pedido);
+        repository.save(pedido);
     }
 }

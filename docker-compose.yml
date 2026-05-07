@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  postgres-db:
+    image: postgres:16-alpine
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 32213115
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init-db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - alurafood-network
+
+  pagamentos-ms:
+    build: ./pagamento
+    container_name: pagamentos-ms
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/alurafood_pagamento
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 32213115
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://pagamentos-ms:8081/eureka/
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "false"
+      EUREKA_CLIENT_FETCH_REGISTRY: "false"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - alurafood-network
+
+  pedidos-ms:
+    build: ./pedidos
+    container_name: pedidos-ms
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/pedidos-food
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 32213115
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://pagamentos-ms:8081/eureka/
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      pagamentos-ms:
+        condition: service_healthy
+    networks:
+      - alurafood-network
+
+  gateway-ms:
+    build: ./Gateway
+    container_name: gateway-ms
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/alurafood_gateway
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 32213115
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://pagamentos-ms:8081/eureka/
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      pagamentos-ms:
+        condition: service_healthy
+      pedidos-ms:
+        condition: service_healthy
+    networks:
+      - alurafood-network
+
+  rabbitmq:
+    image: rabbitmq:3.10-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - alurafood-network
+
+networks:
+  alurafood-network:
+    driver: bridge

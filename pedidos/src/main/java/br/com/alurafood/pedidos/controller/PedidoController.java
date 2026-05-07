@@ -50,7 +50,27 @@ public class PedidoController {
                 @ApiResponse(responseCode = "201", description = "Pedido criado com sucesso"),
                 @ApiResponse(responseCode = "400", description = "Dados inválidos")
         })
-        public ResponseEntity<PedidoDto> realizaPedido(@RequestBody @Valid PedidoDto dto, UriComponentsBuilder uriBuilder) {
+        public ResponseEntity<PedidoDto> realizaPedido(
+                @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                        content = @io.swagger.v3.oas.annotations.media.Content(
+                                mediaType = "application/json",
+                                examples = {
+                                        @io.swagger.v3.oas.annotations.media.ExampleObject(
+                                                name = "Pedido Simples",
+                                                value = "{\"itens\": [{\"quantidade\": 1, \"descricao\": \"Hambúrguer de Siri\"}]}"
+                                        ),
+                                        @io.swagger.v3.oas.annotations.media.ExampleObject(
+                                                name = "Combo Duplo",
+                                                value = "{\"itens\": [{\"quantidade\": 2, \"descricao\": \"Hambúrguer de Siri\"}, {\"quantidade\": 1, \"descricao\": \"Batata Frita\"}]}"
+                                        ),
+                                        @io.swagger.v3.oas.annotations.media.ExampleObject(
+                                                name = "Pedido Família",
+                                                value = "{\"itens\": [{\"quantidade\": 4, \"descricao\": \"Pizza G\"}, {\"quantidade\": 2, \"descricao\": \"Coca-Cola 2L\"}]}"
+                                        )
+                                }
+                        )
+                )
+                @RequestBody @Valid PedidoDto dto, UriComponentsBuilder uriBuilder) {
             PedidoDto pedidoRealizado = service.criarPedido(dto);
 
             URI endereco = uriBuilder.path("/pedidos/{id}").buildAndExpand(pedidoRealizado.getId()).toUri();
